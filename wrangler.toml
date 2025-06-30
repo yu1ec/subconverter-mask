@@ -1,0 +1,15 @@
+name = "subconverter-mask"
+main = "worker.js"  # 指定入口点脚本
+compatibility_date = "2023-10-30"
+
+[[kv_namespaces]]
+binding = "SUB_BUCKET" 
+id= "c2e6664e4cdb421b9ce046a51c6b3c75"
+preview_id = "9429d0472fba4416bc68627968c27c3e"
+
+[site]
+bucket = "./public"  # 静态资源所在的目录 
+
+# 环境变量
+[vars]
+BACKEND = "https://api.dler.io"  # 后端地址

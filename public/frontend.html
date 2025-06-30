@@ -173,10 +173,10 @@
         <div class="app-container">
             <div class="main-card">
                 <!-- 头部 -->
-                <div class="header">
+                <!-- <div class="header">
                     <h1>订阅转换工具</h1>
                     <p>快速转换各种代理订阅格式</p>
-                </div>
+                </div> -->
 
                 <!-- 主要内容 -->
                 <div class="content">
@@ -473,8 +473,8 @@
                         // 构建转换参数
                         const params = new URLSearchParams({
                             target: this.config.target,
-                            url: encodeURIComponent(this.subscription.url),
-                            config: encodeURIComponent(this.config.config),
+                            url: this.subscription.url,
+                            config: this.config.config,
                             emoji: this.config.emoji ? 'true' : 'false',
                             udp: this.config.udp ? 'true' : 'false',
                             scv: this.config.scv ? 'true' : 'false',

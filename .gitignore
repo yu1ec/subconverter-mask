@@ -1,0 +1,5 @@
+.vscode
+.dev.vars
+.DS_Store
+node_modules
+.wrangler
