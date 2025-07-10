@@ -289,6 +289,22 @@ const FRONTEND_HTML = `<!DOCTYPE html>
                                 </div>
                             </el-col>
                         </el-row>
+
+                        <div class="form-row" style="margin-top: 15px;">
+                            <label>Exclude:</label>
+                            <el-input
+                                v-model="config.exclude"
+                                placeholder="输入要排除的节点关键词，多个关键词用|分隔"
+                                clearable
+                                style="margin-top: 5px;">
+                                <template slot="prepend">
+                                    <i class="el-icon-remove"></i>
+                                </template>
+                            </el-input>
+                            <div style="margin-top: 5px; color: #909399; font-size: 12px;">
+                                例如：港|HK|Taiwan 将排除包含这些关键词的节点
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 操作按钮 -->
@@ -484,6 +500,11 @@ const FRONTEND_HTML = `<!DOCTYPE html>
                             sort: this.config.sort ? 'true' : 'false'
                         });
                         
+                        // 如果有exclude参数，添加到URL中
+                        if (this.config.exclude && this.config.exclude.trim()) {
+                            params.append('exclude', this.config.exclude.trim());
+                        }
+                        
                         // 构建转换URL（使用当前域名的API）
                         const convertUrl = \`\${window.location.origin}/sub?\${params.toString()}\`;
                         
@@ -519,7 +540,8 @@ const FRONTEND_HTML = `<!DOCTYPE html>
                         emoji: true,
                         udp: true,
                         scv: false,
-                        sort: false
+                        sort: false,
+                        exclude: ''
                     };
                     
                     this.$message({

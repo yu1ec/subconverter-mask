@@ -116,3 +116,9 @@ class SubscriptionService {
 
 ## 重构来源
 [bulianglin/psub](https://github.com/bulianglin/psub)
+
+
+## 部署到
+```bash
+npx wrangler deploy
+```
