@@ -218,6 +218,73 @@ const FRONTEND_HTML = `<!DOCTYPE html>
                         </el-collapse-transition>
                     </div>
 
+                    <!-- URL解析功能 -->
+                    <div class="form-section">
+                        <h3><i class="el-icon-search"></i> URL解析</h3>
+                        <div class="form-row">
+                            <label>解析转换链接:</label>
+                            <el-input
+                                v-model="parseUrl.input"
+                                placeholder="输入转换链接，将自动解析参数"
+                                clearable
+                                style="margin-top: 5px;">
+                                <template slot="prepend">
+                                    <i class="el-icon-link"></i>
+                                </template>
+                            </el-input>
+                            <div style="margin-top: 10px;">
+                                <el-button 
+                                    type="primary" 
+                                    size="small"
+                                    @click="parseConvertUrl">
+                                    <i class="el-icon-search"></i>
+                                    解析参数
+                                </el-button>
+                                <el-button 
+                                    size="small"
+                                    @click="clearParseResult"
+                                    style="margin-left: 10px;">
+                                    清除
+                                </el-button>
+                            </div>
+                            
+                            <!-- 解析结果展示 -->
+                            <div v-if="parseUrl.result" style="margin-top: 15px; padding: 15px; background: #f0f9ff; border: 1px solid #e0f2fe; border-radius: 6px;">
+                                <h4 style="margin-bottom: 10px; color: #0369a1;">解析结果:</h4>
+                                <div style="margin-bottom: 8px;" v-if="parseUrl.result.originalUrl">
+                                    <strong>原始订阅:</strong> 
+                                    <span style="word-break: break-all;">{{ parseUrl.result.originalUrl }}</span>
+                                </div>
+                                <div style="margin-bottom: 8px;" v-if="parseUrl.result.target">
+                                    <strong>输出格式:</strong> {{ parseUrl.result.target }}
+                                </div>
+                                <div style="margin-bottom: 8px;" v-if="parseUrl.result.config">
+                                    <strong>配置文件:</strong> 
+                                    <span style="word-break: break-all;">{{ parseUrl.result.config }}</span>
+                                </div>
+                                <div style="margin-bottom: 8px;" v-if="parseUrl.result.exclude">
+                                    <strong>排除规则:</strong> {{ parseUrl.result.exclude }}
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <strong>其他选项:</strong>
+                                    <span v-if="parseUrl.result.emoji">Emoji </span>
+                                    <span v-if="parseUrl.result.udp">UDP </span>
+                                    <span v-if="parseUrl.result.scv">跳过证书验证 </span>
+                                    <span v-if="parseUrl.result.sort">节点排序</span>
+                                </div>
+                                <div style="margin-top: 12px;">
+                                    <el-button 
+                                        type="success" 
+                                        size="small"
+                                        @click="fillFormFromParsed">
+                                        <i class="el-icon-edit"></i>
+                                        填充到表单
+                                    </el-button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 高级设置 -->
                     <div class="form-section">
                         <h3><i class="el-icon-setting"></i> 高级设置</h3>
@@ -462,6 +529,12 @@ const FRONTEND_HTML = `<!DOCTYPE html>
                     isConverting: false,
                     showExampleUrls: false,
                     
+                    // URL解析功能
+                    parseUrl: {
+                        input: '',
+                        result: null
+                    },
+                    
                     // 结果数据
                     result: {
                         url: ''
@@ -523,6 +596,104 @@ const FRONTEND_HTML = `<!DOCTYPE html>
                     } finally {
                         this.isConverting = false;
                     }
+                },
+                
+                // 解析转换URL参数
+                parseConvertUrl() {
+                    if (!this.parseUrl.input.trim()) {
+                        this.showError('请输入要解析的链接');
+                        return;
+                    }
+                    
+                    this.parseUrl.result = null;
+                    
+                    try {
+                        // 直接解析URL参数
+                        const parsedResult = this.extractUrlParameters(this.parseUrl.input.trim());
+                        
+                        if (parsedResult) {
+                            this.parseUrl.result = parsedResult;
+                            this.$message({
+                                type: 'success',
+                                message: '链接解析成功！',
+                                duration: 2000
+                            });
+                        } else {
+                            this.showError('无法解析此链接，请检查链接格式是否包含转换参数');
+                        }
+                        
+                    } catch (error) {
+                        console.error('解析失败:', error);
+                        this.showError('解析失败：' + error.message);
+                    }
+                },
+                
+                // 提取URL参数
+                extractUrlParameters(url) {
+                    try {
+                        const urlObj = new URL(url);
+                        const params = urlObj.searchParams;
+                        
+                        // 检查是否包含必要的参数
+                        if (!params.has('url')) {
+                            return null;
+                        }
+                        
+                        return {
+                            originalUrl: decodeURIComponent(params.get('url') || ''),
+                            target: params.get('target') || 'clash',
+                            config: decodeURIComponent(params.get('config') || ''),
+                            exclude: decodeURIComponent(params.get('exclude') || ''),
+                            emoji: params.get('emoji') === 'true',
+                            udp: params.get('udp') === 'true',
+                            scv: params.get('scv') === 'true',
+                            sort: params.get('sort') === 'true'
+                        };
+                    } catch (error) {
+                        console.error('URL解析错误:', error);
+                        return null;
+                    }
+                },
+                
+                // 从解析结果填充表单
+                fillFormFromParsed() {
+                    if (!this.parseUrl.result) return;
+                    
+                    const result = this.parseUrl.result;
+                    
+                    // 填充订阅链接
+                    if (result.originalUrl) {
+                        this.subscription.url = result.originalUrl;
+                    }
+                    
+                    // 填充配置
+                    if (result.target) {
+                        this.config.target = result.target;
+                    }
+                    if (result.config) {
+                        this.config.config = result.config;
+                    }
+                    if (result.exclude) {
+                        this.config.exclude = result.exclude;
+                    }
+                    
+                    // 填充选项
+                    this.config.emoji = result.emoji;
+                    this.config.udp = result.udp;
+                    this.config.scv = result.scv;
+                    this.config.sort = result.sort;
+                    
+                    this.$message({
+                        type: 'success',
+                        message: '参数已填充到表单',
+                        duration: 2000
+                    });
+                },
+                
+                // 清除解析结果
+                clearParseResult() {
+                    this.parseUrl.input = '';
+                    this.parseUrl.result = null;
                 },
                 
                 // 重置表单
